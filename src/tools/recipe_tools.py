@@ -1,3 +1,4 @@
+import json
 import logging
 import traceback
 from typing import List, Optional
@@ -45,13 +46,14 @@ def register_recipe_tools(mcp: FastMCP, mealie: MealieFetcher) -> None:
                     "tags": tags,
                 }
             )
-            return mealie.get_recipes(
+            result = mealie.get_recipes(
                 search=search,
                 page=page,
                 per_page=per_page,
                 categories=categories,
                 tags=tags,
             )
+            return json.dumps(result)
         except Exception as e:
             error_msg = f"Error fetching recipes: {str(e)}"
             logger.error({"message": error_msg})
@@ -75,7 +77,8 @@ def register_recipe_tools(mcp: FastMCP, mealie: MealieFetcher) -> None:
         """
         try:
             logger.info({"message": "Fetching recipe", "slug": slug})
-            return mealie.get_recipe(slug)
+            result = mealie.get_recipe(slug)
+            return json.dumps(result)
         except Exception as e:
             error_msg = f"Error fetching recipe with slug '{slug}': {str(e)}"
             logger.error({"message": error_msg})
@@ -99,7 +102,7 @@ def register_recipe_tools(mcp: FastMCP, mealie: MealieFetcher) -> None:
             logger.info({"message": "Fetching recipe", "slug": slug})
             recipe_json = mealie.get_recipe(slug)
             recipe = Recipe.model_validate(recipe_json)
-            return recipe.model_dump(
+            concise_data = recipe.model_dump(
                 include={
                     "name",
                     "slug",
@@ -108,11 +111,12 @@ def register_recipe_tools(mcp: FastMCP, mealie: MealieFetcher) -> None:
                     "recipeYield",
                     "totalTime",
                     "rating",
-                      "recipeIngredient",
+                    "recipeIngredient",
                     "lastMade",
                 },
                 exclude_none=True,
             )
+            return json.dumps(concise_data)
         except Exception as e:
             error_msg = f"Error fetching recipe with slug '{slug}': {str(e)}"
             logger.error({"message": error_msg})
@@ -144,7 +148,8 @@ def register_recipe_tools(mcp: FastMCP, mealie: MealieFetcher) -> None:
             recipe.recipeInstructions = [
                 RecipeInstruction(text=i) for i in instructions
             ]
-            return mealie.update_recipe(slug, recipe.model_dump(exclude_none=True))
+            result = mealie.update_recipe(slug, recipe.model_dump(exclude_none=True))
+            return json.dumps(result)
         except Exception as e:
             error_msg = f"Error creating recipe '{name}': {str(e)}"
             logger.error({"message": error_msg})
@@ -177,7 +182,8 @@ def register_recipe_tools(mcp: FastMCP, mealie: MealieFetcher) -> None:
             recipe.recipeInstructions = [
                 RecipeInstruction(text=i) for i in instructions
             ]
-            return mealie.update_recipe(slug, recipe.model_dump(exclude_none=True))
+            result = mealie.update_recipe(slug, recipe.model_dump(exclude_none=True))
+            return json.dumps(result)
         except Exception as e:
             error_msg = f"Error updating recipe '{slug}': {str(e)}"
             logger.error({"message": error_msg})
